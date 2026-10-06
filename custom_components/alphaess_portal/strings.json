@@ -1,0 +1,45 @@
+{
+  "title": "AlphaESS Portal Export",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your AlphaESS portal",
+        "description": "Use the owner account that can use Discharge now on the AlphaESS portal Dashboard. Enter the inverter serial number shown there.",
+        "data": {
+          "username": "Portal email",
+          "password": "Portal password",
+          "serial": "Inverter serial number"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in to AlphaESS again",
+        "data": {
+          "username": "Portal email",
+          "password": "Portal password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The portal rejected these credentials or this account cannot access the device.",
+      "cannot_connect": "Could not read this inverter from the portal. Check the serial number and connection."
+    },
+    "abort": {
+      "already_configured": "This inverter is already configured.",
+      "reauth_successful": "Portal credentials updated.",
+      "cannot_connect": "The previous portal configuration could not be imported. Set up the integration through the UI."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Discharge settings",
+        "description": "Changes apply on the next start or renewal. Power is battery output, not guaranteed grid export. Default expiry is five minutes.",
+        "data": {
+          "power_w": "Battery discharge power (W)",
+          "target_soc": "Target state of charge (%)",
+          "duration_minutes": "Command expiry (minutes)"
+        }
+      }
+    }
+  }
+}
