@@ -1,7 +1,7 @@
 """AlphaESS portal force-discharge control."""
 import json
 from pathlib import Path
-import voluptuous as vol
+from homeassistant.helpers import config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -10,7 +10,7 @@ from .const import DOMAIN
 from .coordinator import PortalCoordinator
 
 PLATFORMS = [Platform.SWITCH, Platform.NUMBER, Platform.SENSOR]
-CONFIG_SCHEMA = vol.Schema({vol.Optional(DOMAIN): vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass, config):
     # One-time import of the earlier local experiment. New users use the UI.
