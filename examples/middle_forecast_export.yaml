@@ -1,48 +1,33 @@
 id: alphaess_portal_middle_forecast_export
 alias: AlphaESS portal - middle forecast export at 5 kW
-description: >-
-  Renews portal force discharge using its configured discharge duration during the forecast peak.
-  Stops at low surplus, stale forecasts, end of peak or the portal's 5% SoC floor.
+description: Force discharge between 6 pm and 9 pm while middle excess energy is above zero.
 triggers:
-  - trigger: time_pattern
-    minutes: /1
+  - trigger: time
+    at: "18:00:00"
+  - trigger: time
+    at: "21:00:00"
   - trigger: state
     entity_id: sensor.evening_energy_excess_middle_energy
-  - trigger: homeassistant
-    event: start
-variables:
-  forecast: sensor.evening_energy_excess_middle_energy
-  control: switch.alphaess_portal_force_discharge
-  battery_soc: sensor.your_battery_soc
-  surplus: "{{ states(forecast) | float(0) }}"
-  soc: "{{ states(battery_soc) | float(0) }}"
-  valid: >-
-    {{ has_value(forecast) and has_value(control) and has_value(battery_soc)
-       and state_attr(forecast, 'forecast_ready') == true
-       and as_timestamp(state_attr(forecast, 'valid_until'), 0) > as_timestamp(now()) }}
-  peak: "{{ state_attr(forecast, 'peak_active') == true }}"
-conditions: []
 actions:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: >-
-              {{ not valid or not peak or soc <= 5 or surplus <= 0.25 }}
-        sequence:
-          - condition: state
-            entity_id: switch.alphaess_portal_force_discharge
-            state: "on"
-          - action: switch.turn_off
-            target:
-              entity_id: switch.alphaess_portal_force_discharge
-      - conditions:
-          - condition: template
-            value_template: >-
-              {{ valid and peak and soc > 5
-                 and (surplus > 0.5 or is_state(control, 'on')) }}
-        sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.alphaess_portal_force_discharge
+  - if:
+      - condition: time
+        after: "18:00:00"
+        before: "21:00:00"
+      - condition: numeric_state
+        entity_id: sensor.evening_energy_excess_middle_energy
+        above: 0
+    then:
+      - condition: state
+        entity_id: switch.alphaess_portal_force_discharge
+        state: "off"
+      - action: switch.turn_on
+        target:
+          entity_id: switch.alphaess_portal_force_discharge
+    else:
+      - condition: state
+        entity_id: switch.alphaess_portal_force_discharge
+        state: "on"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.alphaess_portal_force_discharge
 mode: single
-max_exceeded: silent
