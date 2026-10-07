@@ -18,13 +18,13 @@ A registered AlphaESS device provides:
 - **Force Discharge switch**: on starts or renews a timed discharge; off cancels it and releases the override back to normal operation.
 - **Discharge power**: requested battery output in watts; default 5,000 W.
 - **Target state of charge**: stops at the selected SoC; minimum/default 5%, matching the portal UI.
-- **Discharge duration**: command expiry in minutes; default five minutes.
+- **Discharge duration**: discharge duration in minutes; default five minutes.
 
 This integration creates **no telemetry sensors**. Use your existing AlphaESS integration for SoC, battery/grid power and home load.
 
 Change settings with the number entities or the integration's **Configure** menu. Settings persist in Home Assistant and apply to the next start/renewal; changing a setting alone does not start discharge. Power requests remain subject to inverter and battery limits. Without solar, household consumption reduces net grid export.
 
-Calling `switch.turn_on` again renews the command. If Home Assistant stops renewing, the inverter's timed command expires. Changing the default duration also changes that timeout. Unloading/restarting the integration leaves an existing command to expire; it does not issue a battery command by itself.
+Calling `switch.turn_on` again starts or renews discharge using the configured **Discharge duration**. The portal ends the run when that duration completes. There is one duration setting, sent directly as the portal request’s `duration` field; the integration adds no separate expiry setting or discharge timer. Unloading/restarting the integration does not issue a battery command by itself.
 
 ## Managed polling
 
@@ -40,13 +40,13 @@ The integration reads dispatch status to confirm the switch state. Polling defau
 
 Both normal intervals are configurable through the integration's **Configure** menu. Defaults reduce idle background status requests from 2,880 to 288 per day (90%). Authentication/session refresh and device discovery add occasional requests; explicit control commands and their confirmation reads are additional. The per-minute renewal automation still sends its intended control requests while discharge is active.
 
-Polling verifies control state; it does not renew discharge. A five-minute server-side command expiry remains in force if HA stops renewing. No status poll issues a battery command. External portal changes can take up to the idle interval to appear in HA. A rejected login still triggers reauthentication.
+Polling verifies control state; it does not renew discharge. The portal uses the configured discharge duration; status polling does not extend it. No status poll issues a battery command. External portal changes can take up to the idle interval to appear in HA. A rejected login still triggers reauthentication.
 
 Upgrading from v0.2.x removes the four old Portal telemetry sensor registry entries and redundant SoC/power switch attributes. The force-discharge switch and three setting entities keep their identities. Automations that used the removed telemetry must use their existing monitoring integration instead. The included example uses a separate SoC entity and no longer depends on a three-minute Portal telemetry timestamp, which would conflict with idle polling.
 
 ## Middle-forecast automation
 
-[examples/middle_forecast_export.yaml](examples/middle_forecast_export.yaml) connects this control to the independent [Evening Energy surplus integration](https://github.com/funkmaster-dan/ha-energy-excess). It renews discharge each minute during the forecast peak, and stops when forecasts are stale, surplus is low, SoC reaches 5%, or the peak ends. Set its `battery_soc` variable to the SoC entity from your existing integration. Keep the five-minute expiry for this example. Unchanged SoC values remain valid while HA reports the entity available. Its switch entity ID is the default for a first device; adjust it if you rename the entity or configure several inverters.
+[examples/middle_forecast_export.yaml](examples/middle_forecast_export.yaml) connects this control to the independent [Evening Energy surplus integration](https://github.com/funkmaster-dan/ha-energy-excess). It renews discharge each minute during the forecast peak, and stops when forecasts are stale, surplus is low, SoC reaches 5%, or the peak ends. Set its `battery_soc` variable to the SoC entity from your existing integration. Choose a discharge duration suitable for its per-minute renewal cadence (the default is five minutes). Unchanged SoC values remain valid while HA reports the entity available. Its switch entity ID is the default for a first device; adjust it if you rename the entity or configure several inverters.
 
 The forecasting integration is optional. Any automation can use the switch with ordinary `switch.turn_on` / `switch.turn_off` actions.
 

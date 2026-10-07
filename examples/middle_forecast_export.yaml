@@ -1,7 +1,7 @@
 id: alphaess_portal_middle_forecast_export
 alias: AlphaESS portal - middle forecast export at 5 kW
 description: >-
-  Renews a five-minute portal force-discharge command during the forecast peak.
+  Renews portal force discharge using its configured discharge duration during the forecast peak.
   Stops at low surplus, stale forecasts, end of peak or the portal's 5% SoC floor.
 triggers:
   - trigger: time_pattern

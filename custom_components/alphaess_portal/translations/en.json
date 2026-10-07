@@ -33,11 +33,11 @@
     "step": {
       "init": {
         "title": "Discharge and polling settings",
-        "description": "Discharge settings apply on the next command. Status polling is faster while discharge is active, slower while idle. Start/stop requests an immediate status refresh. Default command expiry is five minutes.",
+        "description": "Discharge settings apply on the next command. Status polling is faster while discharge is active, slower while idle. Start/stop requests a status refresh.",
         "data": {
           "power_w": "Battery discharge power (W)",
           "target_soc": "Target state of charge (%)",
-          "duration_minutes": "Command expiry (minutes)",
+          "duration_minutes": "Discharge duration (minutes)",
           "active_poll_seconds": "Status polling while discharging (seconds)",
           "idle_poll_seconds": "Status polling while idle (seconds)"
         }

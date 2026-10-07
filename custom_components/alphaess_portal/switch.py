@@ -1,4 +1,4 @@
-"""Force discharge with explicit, renewable expiry."""
+"""Force discharge for the configured portal discharge duration."""
 from aiohttp import ClientError
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.exceptions import HomeAssistantError
@@ -27,7 +27,7 @@ class DischargeSwitch(PortalEntity, SwitchEntity):
     @property
     def extra_state_attributes(self):
         dispatch = self.power.get('dispatch') or {}
-        return {'dispatch_source': dispatch.get('source'), 'power_limit_kw': dispatch.get('powerLimitKw'), 'requested_power_w': self.coordinator.setting('power_w'), 'target_soc': self.coordinator.setting('target_soc'), 'expiry_minutes': self.coordinator.setting('duration_minutes'), 'poll_interval_seconds': self.coordinator.update_interval.total_seconds(), 'last_checked': self.coordinator.last_checked}
+        return {'dispatch_source': dispatch.get('source'), 'power_limit_kw': dispatch.get('powerLimitKw'), 'requested_power_w': self.coordinator.setting('power_w'), 'target_soc': self.coordinator.setting('target_soc'), 'duration_minutes': self.coordinator.setting('duration_minutes'), 'poll_interval_seconds': self.coordinator.update_interval.total_seconds(), 'last_checked': self.coordinator.last_checked}
 
     async def async_turn_on(self, **kwargs):
         try:
