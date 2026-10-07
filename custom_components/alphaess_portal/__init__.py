@@ -1,7 +1,7 @@
 """AlphaESS portal force-discharge control."""
 import json
 from pathlib import Path
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -9,7 +9,7 @@ from .client import PortalClient
 from .const import DOMAIN
 from .coordinator import PortalCoordinator
 
-PLATFORMS = [Platform.SWITCH, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.SWITCH, Platform.NUMBER]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass, config):
@@ -27,6 +27,10 @@ async def async_setup_entry(hass, entry):
     client = PortalClient(async_get_clientsession(hass), entry.data['username'], entry.data['password'], entry.data['serial'])
     coordinator = PortalCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
+    registry = er.async_get(hass)
+    for entity in list(registry.entities.values()):
+        if entity.config_entry_id == entry.entry_id and entity.platform == DOMAIN and entity.domain == 'sensor':
+            registry.async_remove(entity.entity_id)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

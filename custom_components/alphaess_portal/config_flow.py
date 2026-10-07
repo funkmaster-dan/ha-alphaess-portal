@@ -18,6 +18,8 @@ def options_schema(options):
     return vol.Schema({
         vol.Required('power_w', default=options.get('power_w', 5000)): vol.All(vol.Coerce(int), vol.Range(min=100, max=30000)),
         vol.Required('target_soc', default=options.get('target_soc', 5)): vol.All(vol.Coerce(int), vol.Range(min=5, max=100)),
+        vol.Required('active_poll_seconds', default=options.get('active_poll_seconds', DEFAULTS['active_poll_seconds'])): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
+        vol.Required('idle_poll_seconds', default=options.get('idle_poll_seconds', DEFAULTS['idle_poll_seconds'])): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
         vol.Required('duration_minutes', default=options.get('duration_minutes', 5)): vol.All(vol.Coerce(int), vol.Range(min=1, max=180)),
     })
 

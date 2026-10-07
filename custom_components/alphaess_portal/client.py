@@ -2,6 +2,8 @@
 import asyncio
 import base64
 import hashlib
+import math
+from time import monotonic
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -10,19 +12,33 @@ from cryptography.hazmat.primitives import padding
 class PortalAuthError(RuntimeError):
     """The owner account needs to sign in again."""
 
+class PortalRateLimitError(RuntimeError):
+    """The server asked us to slow down."""
+    def __init__(self, retry_after=60):
+        super().__init__('AlphaESS portal rate limited the request')
+        self.retry_after = retry_after
+
 class PortalClient:
     def __init__(self, session, username, password, serial):
         self.session, self.username, self.password, self.serial = session, username.strip(), password, serial
         self._lock = asyncio.Lock()
+        self._retry_at = 0
         self.endpoint = None
         self.token = None
         self.site_id = None
         self.headers = {'Client-End': 'Web', 'Client-Name': 'Portal', 'Tenant': 'alphaess', 'Accept-Language': 'en-US'}
 
     async def _json(self, method, url, **kwargs):
+        if monotonic() < self._retry_at:
+            raise PortalRateLimitError(math.ceil(self._retry_at - monotonic()))
         async with self.session.request(method, url, headers=self.headers, timeout=25, **kwargs) as response:
             if response.status in (401, 403):
                 raise PortalAuthError('Portal authentication rejected')
+            if response.status == 429:
+                try: retry_after = max(60, int(response.headers.get('Retry-After', 60)))
+                except (TypeError, ValueError): retry_after = 60
+                self._retry_at = monotonic() + retry_after
+                raise PortalRateLimitError(retry_after)
             if response.status >= 400:
                 # Do not include raw responses or credentials in HA logs.
                 raise RuntimeError(f'AlphaESS portal request failed (HTTP {response.status})')
@@ -43,6 +59,8 @@ class PortalClient:
         encrypted = base64.b64encode(encryptor.update(raw) + encryptor.finalize()).decode()
         try:
             data = await self._json('POST', self.endpoint + '/users-center/sessions', json={'type': 'password', 'email': self.username, 'password': encrypted})
+        except PortalRateLimitError:
+            raise
         except RuntimeError as exc:
             raise PortalAuthError('Portal login rejected') from exc
         if 'accessToken' not in data:
@@ -64,6 +82,8 @@ class PortalClient:
                 self.token = data
                 self.expires = datetime.now(timezone.utc).timestamp() + data['expiresIn'] - 60
                 self.headers['Authorization'] = 'Bearer ' + data['accessToken']
+            except PortalRateLimitError:
+                raise
             except RuntimeError:
                 await self.login()
         return await self._json(method, self.endpoint + path, **kwargs)

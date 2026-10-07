@@ -27,13 +27,14 @@ class DischargeSwitch(PortalEntity, SwitchEntity):
     @property
     def extra_state_attributes(self):
         dispatch = self.power.get('dispatch') or {}
-        return {'battery_soc': self.power.get('soc'), 'battery_power_w': self.power.get('battery'), 'grid_power_w': self.power.get('grid'), 'dispatch_source': dispatch.get('source'), 'power_limit_kw': dispatch.get('powerLimitKw'), 'requested_power_w': self.coordinator.setting('power_w'), 'target_soc': self.coordinator.setting('target_soc'), 'expiry_minutes': self.coordinator.setting('duration_minutes'), 'observed_at': self.power.get('observedAt')}
+        return {'dispatch_source': dispatch.get('source'), 'power_limit_kw': dispatch.get('powerLimitKw'), 'requested_power_w': self.coordinator.setting('power_w'), 'target_soc': self.coordinator.setting('target_soc'), 'expiry_minutes': self.coordinator.setting('duration_minutes'), 'poll_interval_seconds': self.coordinator.update_interval.total_seconds(), 'last_checked': self.coordinator.last_checked}
 
     async def async_turn_on(self, **kwargs):
         try:
             await self.coordinator.client.discharge(power=self.coordinator.setting('power_w'), target_soc=self.coordinator.setting('target_soc'), duration=self.coordinator.setting('duration_minutes'))
         except (RuntimeError, ClientError, TimeoutError) as exc:
             raise HomeAssistantError('AlphaESS portal could not start discharge') from exc
+        self.coordinator.command_sent()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -41,4 +42,5 @@ class DischargeSwitch(PortalEntity, SwitchEntity):
             await self.coordinator.client.stop()
         except (RuntimeError, ClientError, TimeoutError) as exc:
             raise HomeAssistantError('AlphaESS portal could not stop discharge') from exc
+        self.coordinator.command_sent()
         await self.coordinator.async_request_refresh()

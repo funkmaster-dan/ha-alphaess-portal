@@ -13,13 +13,13 @@ triggers:
 variables:
   forecast: sensor.evening_energy_excess_middle_energy
   control: switch.alphaess_portal_force_discharge
+  battery_soc: sensor.your_battery_soc
   surplus: "{{ states(forecast) | float(0) }}"
-  soc: "{{ state_attr(control, 'battery_soc') | float(0) }}"
+  soc: "{{ states(battery_soc) | float(0) }}"
   valid: >-
-    {{ has_value(forecast) and has_value(control)
+    {{ has_value(forecast) and has_value(control) and has_value(battery_soc)
        and state_attr(forecast, 'forecast_ready') == true
-       and as_timestamp(state_attr(forecast, 'valid_until'), 0) > as_timestamp(now())
-       and as_timestamp(state_attr(control, 'observed_at'), 0) > as_timestamp(now()) - 180 }}
+       and as_timestamp(state_attr(forecast, 'valid_until'), 0) > as_timestamp(now()) }}
   peak: "{{ state_attr(forecast, 'peak_active') == true }}"
 conditions: []
 actions:

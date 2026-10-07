@@ -32,12 +32,14 @@
   "options": {
     "step": {
       "init": {
-        "title": "Discharge settings",
-        "description": "Changes apply on the next start or renewal. Power is battery output, not guaranteed grid export. Default expiry is five minutes.",
+        "title": "Discharge and polling settings",
+        "description": "Discharge settings apply on the next command. Status polling is faster while discharge is active, slower while idle. Start/stop requests an immediate status refresh. Default command expiry is five minutes.",
         "data": {
           "power_w": "Battery discharge power (W)",
           "target_soc": "Target state of charge (%)",
-          "duration_minutes": "Command expiry (minutes)"
+          "duration_minutes": "Command expiry (minutes)",
+          "active_poll_seconds": "Status polling while discharging (seconds)",
+          "idle_poll_seconds": "Status polling while idle (seconds)"
         }
       }
     }
