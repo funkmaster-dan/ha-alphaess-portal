@@ -26,7 +26,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     client = PortalClient(async_get_clientsession(hass), entry.data['username'], entry.data['password'], entry.data['serial'])
     coordinator = PortalCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
+    # Local setting controls remain usable during a network outage.
+    # A failed first status read leaves only the dispatch switch unavailable.
+    await coordinator.async_refresh()
     registry = er.async_get(hass)
     for entity in list(registry.entities.values()):
         if entity.config_entry_id == entry.entry_id and entity.platform == DOMAIN and entity.domain == 'sensor':

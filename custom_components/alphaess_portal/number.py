@@ -19,6 +19,11 @@ class DischargeSetting(PortalEntity, NumberEntity):
         self._attr_unique_id = f"alphaess_portal_{coordinator.entry.data['serial']}_{self.key}"
 
     @property
+    def available(self):
+        # These values are local HA options, not cloud telemetry.
+        return True
+
+    @property
     def native_value(self):
         return self.coordinator.setting(self.key)
 
